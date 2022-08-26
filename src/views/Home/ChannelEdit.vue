@@ -3,7 +3,8 @@
         <!-- 弹出层的头部区域 -->
         <van-nav-bar title="频道管理">
             <template #right>
-                <van-icon name="cross" size="0.37333334rem" color="white" />
+                <!-- //子项父 自定义事件 -->
+                <van-icon @click = "closeFn" name="cross" size="0.37333334rem" color="white" />
             </template>
         </van-nav-bar>
         <!-- 我的频道 -->
@@ -11,18 +12,22 @@
             <div class="channel-title">
                 <span>我的频道
                     <span class="small-title">
-                        点击进入频道
+                        {{ isEdit ? "点击删除频道" : "点击进入频道"}}
                     </span>
                 </span>
-                <span>编辑</span>
+                <span @click = "isEdit = !isEdit">{{isEdit ? "完成" : "编辑"}}</span>
             </div>
             <!-- 我的频道列表 -->
             <van-row type="flex">
-                <van-col span="6">
-                    <div class="channel-item van-hairline--surround">
-                        名字
+                <van-col span="6" v-for="obj in userList"
+                :key="obj.id">
+                    <div @click="removeFn(obj)" class="channel-item van-hairline--surround">
+                        {{obj.name}}
                         <!-- 删除的徽标 -->
-                        <van-badge color="transparent" class="cross-badge">
+                        <van-badge color="transparent" 
+                        class="cross-badge" 
+                        v-if="isEdit && obj.id !== 0"
+                        >
                             <template #content>
                                 <van-icon name="cross" class="badge-icon" color="#cfcfcf" size="0.32rem" />
                             </template>
@@ -39,8 +44,11 @@
             </div>
             <!-- 更多频道列表 -->
             <van-row type="flex">
-                <van-col span="6">
-                    <div class="channel-item van-hairline--surround">名字</div>
+                <van-col span="6" v-for="obj in moreList"
+                :key="obj.id"
+                @click="addFn(obj)"
+                >
+                    <div class="channel-item van-hairline--surround">{{obj.name}}</div>
                 </van-col>
             </van-row>
         </div>
@@ -48,7 +56,37 @@
 </template>
 
 <script>
-export default {}
+export default {
+    data() {
+        return {
+            isEdit: false
+        }
+    },
+    props: {
+        userList: Array,
+        moreList: Array
+    },
+    methods: {
+        closeFn() {
+            this.$emit('closeEv')
+        },
+        //新增频道
+        addFn(item) {
+            if(this.isEdit) {
+                this.$emit('addEv',item)
+            }
+        },
+        //移除频道
+        removeFn(item) {
+            if(this.isEdit && item.name !== '推荐'){
+                this.$emit('removeEv',item)
+            }else {
+                this.$emit('changeChannelEv', item)
+                this.$emit('close') // 关闭弹窗
+            }
+        }
+    } 
+}
 </script>
 
 <style scoped lang="less">

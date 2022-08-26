@@ -16,8 +16,15 @@
     <!-- 编辑频道图标 -->
     <van-icon name="plus" size="0.37333334rem" class="moreChannels" @click="showPopup" />
     <!-- 弹出层组件 -->
-    <van-popup v-model="show" class="edit_wrap">
-      <ChannelEdit></ChannelEdit>
+    <van-popup v-model="show" class="edit_wrap" @closed="onPopupClosed">
+      <ChannelEdit
+      :userList = "userChannelsList"
+      :moreList = "moreChannelsList"
+      @addEv = "addChannelFn"
+      @removeEv = "removeChannelFn"
+      @changeChannelEv = "changeChannelFn"
+      ref="ChannelEdit"
+      @closeEv="show = false" ></ChannelEdit>
     </van-popup>
   </div>
 </template>
@@ -34,6 +41,7 @@ export default {
       userChannelsList: [], //用户已选频道
       allChannelsList: [], //所有频道
       // recommendArtList: []//推荐文章列表
+      //moreChannelsList: [], //更多频道(用户未选的频道)
       show: false
     };
   },
@@ -46,13 +54,40 @@ export default {
     // this.chanIdchangeFn()
     // 所有频道列表
     const res2 = await getAllChannelsAPI()
-    this.allChannelsList = res.data.data.channels
+    this.allChannelsList = res2.data.data.channels
     // console.log(res2)
-    
+  },
+  computed: {
+    //更多频道(用户未选的频道)
+    moreChannelsList() {
+      return this.allChannelsList.filter(obj=>{
+        const index = this.userChannelsList.findIndex(obj2=>{
+          return obj2.id === obj.id
+        })
+        return index === -1
+      })
+    }
   },
   methods: {
     showPopup() {
       this.show = true
+    },
+    addChannelFn(obj) {
+      this.userChannelsList.push(obj)
+    },
+    removeChannelFn(item) {
+      const index = this.userChannelsList.findIndex(obj=>{
+        return obj.id === item.id
+      })
+      this.userChannelsList.splice(index,1)
+    },
+    onPopupClosed() {
+      this.$refs.ChannelEdit.isEdit = false
+      // console.log(this.$refs.ChannelEdit);
+    },
+    changeChannelFn(obj) {
+      this.chanId = obj.id
+      this.show = false
     }
   },
   components: {
